@@ -89,21 +89,13 @@
                     <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
                         <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">3</span>
                         <div>
-                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">星光舞台</span>
-                            <h3 class="font-bold text-gray-800 mt-1">開放歡唱時間</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">放鬆享用佳餚，開懷歡唱！</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
-                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">4</span>
-                        <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">默契大考驗</span>
                             <h3 class="font-bold text-gray-800 mt-1">肢體比手畫腳</h3>
                             <p class="text-xs text-gray-500 mt-0.5">3~4人一組輪流比劃（全程禁聲），限時內猜對越多題得分越高！</p>
                         </div>
                     </div>
                     <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
-                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">5</span>
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">4</span>
                         <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">資深幸運抽</span>
                             <h3 class="font-bold text-gray-800 mt-1">一年以上同仁摸彩</h3>
@@ -111,7 +103,7 @@
                         </div>
                     </div>
                     <div class="flex gap-4 items-start">
-                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">6</span>
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">5</span>
                         <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">腦力大爆發</span>
                             <h3 class="font-bold text-gray-800 mt-1">接力猜詞</h3>
@@ -454,7 +446,6 @@
             }
         }
 
-        // --- 排行榜登記與呈現 (一般同事前五名、主持人全看) ---
         function openEditScoreModal(name) {
             editingPlayerName = name;
             document.getElementById('editScorePlayerName').innerText = name;
@@ -494,10 +485,7 @@
                 return { name, uc: s.uc || 0, ch: s.ch || 0, re: s.re || 0, task: s.task || 0, total };
             });
 
-            // 依總分由高到低排序
             list.sort((a, b) => b.total - a.total);
-
-            // 一般同事僅能看到前 5 名，主持人可看到所有人
             const displayList = isHost ? list : list.slice(0, 5);
 
             displayList.forEach((item, idx) => {
@@ -517,7 +505,6 @@
             });
         }
 
-        // --- 遊戲邏輯與渲染 ---
         function sendUndercoverLobby() {
             const selected = Array.from(document.querySelectorAll('.uc-cb:checked')).map(cb => cb.value);
             if (selected.length < 3) { alert('請至少選擇 3 位上場夥伴！'); return; }

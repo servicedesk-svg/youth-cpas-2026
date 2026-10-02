@@ -91,7 +91,7 @@
                         <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">3</span>
                         <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">默契大考驗</span>
-                            <h3 class="font-bold text-gray-800 mt-1">肢體比手畫腳</h3>
+                            <h3 class="font-bold text-gray-800 mt-1">比手畫腳</h3>
                             <p class="text-xs text-gray-500 mt-0.5">3~4人一組輪流比劃（全程禁聲），限時內猜對越多題得分越高！</p>
                         </div>
                     </div>
@@ -124,11 +124,22 @@
 
         <!-- 頁籤二：遊戲機制與工具 -->
         <section id="page-games" class="space-y-6 hidden">
+            
             <!-- 1. 誰是臥底 -->
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-900">1. 誰是臥底</h3>
                     <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">個人計分賽</span>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs text-gray-600 space-y-2">
+                    <div class="font-bold text-gray-800 flex items-center gap-1">📜 遊戲機制與規則解說：</div>
+                    <ul class="list-disc list-inside space-y-1 leading-relaxed">
+                        <li><strong>發牌機制：</strong>主持人選定上場同仁後點擊發牌，大部分人拿到「平民詞」，僅一人拿到極相近的「臥底詞」。</li>
+                        <li><strong>發言環節：</strong>台上同仁依序用一句話描述自己看到的詞（不能直接講出詞彙文字）。</li>
+                        <li><strong>競猜與投票：</strong>每輪描述結束後全場投票抓臥底；台下觀眾亦可競猜賺取個人積分。</li>
+                        <li><strong>計分方式：</strong>平民成功抓出臥底每人 +100 分；臥底成功隱藏撐到最後 +200 分。</li>
+                    </ul>
                 </div>
 
                 <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
@@ -145,11 +156,20 @@
                 </div>
             </div>
 
-            <!-- 2. 肢體比手畫腳 -->
+            <!-- 2. 比手畫腳 -->
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-900">2. 肢體比手畫腳</h3>
+                    <h3 class="text-lg font-bold text-gray-900">2. 比手畫腳</h3>
                     <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">團隊限時賽</span>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs text-gray-600 space-y-2">
+                    <div class="font-bold text-gray-800 flex items-center gap-1">📜 遊戲機制與規則解說：</div>
+                    <ul class="list-disc list-inside space-y-1 leading-relaxed">
+                        <li><strong>比劃規則：</strong>比劃者僅能使用肢體動作與面部表情（全程禁止出聲或做出文字形狀）。</li>
+                        <li><strong>視角遮蔽：</strong>系統會自動為台上猜題者遮蔽題目，僅比劃者與台下觀眾可看到題目。</li>
+                        <li><strong>計分方式：</strong>限時 2 分鐘內，全隊答對題目越多得分越高，每答對一題隊伍個人積分各 +50 分。</li>
+                    </ul>
                 </div>
 
                 <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
@@ -166,8 +186,18 @@
             <!-- 3. 接力猜詞 -->
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-900">3. 急轉接力猜詞</h3>
+                    <h3 class="text-lg font-bold text-gray-900">3. 接力猜詞</h3>
                     <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">團隊競速賽</span>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs text-gray-600 space-y-2">
+                    <div class="font-bold text-gray-800 flex items-center gap-1">📜 遊戲機制與規則解說：</div>
+                    <ul class="list-disc list-inside space-y-1 leading-relaxed">
+                        <li><strong>接力提示：</strong>由主持人指定猜題者，其餘隊友順時針方向輪流「一人講一句話」給予提示。</li>
+                        <li><strong>提示禁忌：</strong>提示句中禁止出現題目中的任何字或同音字、外文翻譯。</li>
+                        <li><strong>猜對輪替：</strong>猜題者答對後，順時針換下一位成為猜題者，考驗團隊流暢度與反應。</li>
+                        <li><strong>計分方式：</strong>限時內接力猜出越多詞彙，全隊同仁個人分數累加越高！</li>
+                    </ul>
                 </div>
 
                 <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
@@ -268,7 +298,7 @@
                     <input type="number" id="scoreInputUC" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
                 </div>
                 <div>
-                    <label class="font-bold text-gray-700 block mb-1">肢體比手畫腳得分：</label>
+                    <label class="font-bold text-gray-700 block mb-1">比手畫腳得分：</label>
                     <input type="number" id="scoreInputCH" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
                 </div>
                 <div>
@@ -409,7 +439,6 @@
             db.ref('partyState/players').set(PLAYERS);
         }
 
-        // --- 綁定身份與防偷看鎖定邏輯 ---
         function setUserIdentity(name) {
             if (!name) return;
             myIdentity = name;
@@ -429,7 +458,6 @@
                 tag.innerText = `👤 ${myIdentity}`;
                 select.value = myIdentity;
 
-                // 若非主持人視角，選擇後立刻鎖定下拉選單
                 if (!isHost) {
                     select.disabled = true;
                     select.classList.add('opacity-75', 'cursor-not-allowed', 'bg-gray-200');

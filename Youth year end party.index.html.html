@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友士國際會計師事務所 Youth CPAs Firm - 2026 尾牙同樂會</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #F4F2E9; color: #222222; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .bg-crimson { background-color: #D0324B; }
+        .text-crimson { color: #D0324B; }
+        .border-crimson { border-color: #D0324B; }
+        .bg-pink-soft { background-color: #FCE2E6; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(208, 50, 75, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03); }
+        .nav-btn.active { background-color: #D0324B; color: white; font-weight: bold; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-12">
+
+    <!-- 頂部 Header -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-crimson text-white font-bold flex items-center justify-center text-lg shadow-md">友</div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-gray-900 tracking-tight">友士國際會計師事務所</h1>
+                    <p class="text-xs text-crimson font-semibold">Youth CPAs Firm · 2026 尾牙同樂會</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="userIdentityTag" class="text-xs px-3 py-1 rounded-full bg-pink-soft text-crimson font-semibold">👤 未選擇身份</span>
+                <button onclick="toggleHostModal()" class="text-xs px-3 py-1.5 rounded-xl bg-crimson text-white font-bold hover:bg-red-700 transition flex items-center gap-1 shadow-sm">
+                    <span id="hostLockIcon">🔒</span> <span id="hostStatusText">主持人解鎖</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 導覽頁籤 -->
+        <div class="max-w-4xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto text-xs sm:text-sm font-medium border-t border-gray-100">
+            <button onclick="switchTab('flow')" id="tab-flow" class="nav-btn active px-4 py-2 rounded-xl transition whitespace-nowrap">盛會流程與摸彩</button>
+            <button onclick="switchTab('games')" id="tab-games" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">遊戲機制與工具</button>
+            <button onclick="switchTab('teams')" id="tab-teams" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">團隊隨機分組器</button>
+            <button onclick="switchTab('scoreboard')" id="tab-scoreboard" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">個人積分排行榜</button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 pt-6 flex-grow w-full">
+
+        <!-- 身份選擇與名單管理區 -->
+        <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="text-sm">
+                <span class="font-bold text-gray-800">📲 請選擇您的姓名綁定手機身份：</span>
+                <span class="text-xs text-gray-500 block sm:inline">（系統會依據身份顯示發牌或遮蔽題目）</span>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <select id="identitySelect" onchange="setUserIdentity(this.value)" class="border border-gray-300 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-gray-800 focus:outline-none focus:border-crimson flex-grow">
+                    <option value="">-- 請選擇您的姓名 --</option>
+                </select>
+                <button onclick="toggleManagePlayersModal()" class="host-only hidden bg-gray-800 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">⚙️ 管理名單</button>
+            </div>
+        </div>
+
+        <!-- 頁籤一：盛會流程與摸彩 -->
+        <section id="page-flow" class="space-y-6">
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span class="w-2.5 h-6 bg-crimson rounded-full inline-block"></span>活動流程
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">1</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">歡樂破冰</span>
+                            <h3 class="font-bold text-gray-800 mt-1">誰是臥底大搜查</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">每局3~4人上場描述，台下觀眾同步競猜賺積分！</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">2</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">新星幸運抽</span>
+                            <h3 class="font-bold text-gray-800 mt-1">一年以下同仁摸彩</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">老闆現場抽出上台順序，依心儀「電影名稱」挑選卡片揭曉獎項！</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">3</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">星光舞台</span>
+                            <h3 class="font-bold text-gray-800 mt-1">開放歡唱時間</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">放鬆享用佳餚，開懷歡唱！</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">4</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">默契大考驗</span>
+                            <h3 class="font-bold text-gray-800 mt-1">肢體比手畫腳</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">3~4人一組輪流比劃（全程禁聲），限時內猜對越多題得分越高！</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">5</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">資深幸運抽</span>
+                            <h3 class="font-bold text-gray-800 mt-1">一年以上同仁摸彩</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">由老闆現場抽出上台順序，選擇電影主題卡現場揭曉獎項！</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <span class="w-7 h-7 rounded-full bg-crimson text-white font-bold flex items-center justify-center text-xs shrink-0">6</span>
+                        <div>
+                            <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">腦力大爆發</span>
+                            <h3 class="font-bold text-gray-800 mt-1">接力猜詞</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">隊友一人一句提示，猜題者順時針輪替，考驗反應與默契！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100">
+                <h3 class="font-bold text-gray-900 mb-2 flex items-center gap-2">🃏 個人隱藏任務牆（整場貫穿）</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    每位同仁在入場時會收到一張任務卡。請在尾牙現場尋找機會完成小卡內的任務，**完成次數無上限，次數越多積分累加越高！** 尾牙尾聲將頒發「解任務王」獎項！
+                </p>
+            </div>
+        </section>
+
+        <!-- 頁籤二：遊戲機制與工具 -->
+        <section id="page-games" class="space-y-6 hidden">
+            <!-- 1. 誰是臥底 -->
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900">1. 誰是臥底</h3>
+                    <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">個人計分賽</span>
+                </div>
+
+                <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
+                    <div class="font-bold text-xs text-crimson">👑 主持人控場：選擇上場名單</div>
+                    <div id="undercoverPlayerCheckboxes" class="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs"></div>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="sendUndercoverLobby()" class="bg-gray-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold">1. 發送邀請</button>
+                        <button onclick="startUndercoverGame()" class="bg-crimson text-white px-3 py-1.5 rounded-xl text-xs font-bold">2. 確認人滿開牌</button>
+                    </div>
+                </div>
+
+                <div id="undercoverDisplayCard" class="bg-gray-50 p-6 rounded-2xl text-center border border-gray-200 min-h-[120px] flex flex-col justify-center items-center">
+                    <p class="text-sm text-gray-400">等待主持人啟動遊戲...</p>
+                </div>
+            </div>
+
+            <!-- 2. 肢體比手畫腳 -->
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900">2. 肢體比手畫腳</h3>
+                    <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">團隊限時賽</span>
+                </div>
+
+                <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
+                    <div class="font-bold text-xs text-crimson">👑 主持人控場：選擇上場隊伍</div>
+                    <div id="charadesPlayerCheckboxes" class="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs"></div>
+                    <button onclick="drawCharadesTopic()" class="bg-crimson text-white px-4 py-2 rounded-xl text-xs font-bold">抽取新題目</button>
+                </div>
+
+                <div id="charadesDisplayCard" class="bg-gray-50 p-6 rounded-2xl text-center border border-gray-200 min-h-[120px] flex flex-col justify-center items-center">
+                    <p class="text-sm text-gray-400">等待主持人抽題...</p>
+                </div>
+            </div>
+
+            <!-- 3. 接力猜詞 -->
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900">3. 急轉接力猜詞</h3>
+                    <span class="text-xs bg-pink-soft text-crimson font-bold px-3 py-1 rounded-full">團隊競速賽</span>
+                </div>
+
+                <div class="host-only hidden bg-pink-50 p-4 rounded-2xl border border-pink-200 space-y-3">
+                    <div class="font-bold text-xs text-crimson">👑 主持人控場：選擇當前猜題者</div>
+                    <select id="relayGuesserSelect" class="border border-gray-300 rounded-xl px-3 py-1.5 text-xs w-full bg-white font-bold"></select>
+                    <button onclick="drawRelayTopic()" class="bg-crimson text-white px-4 py-2 rounded-xl text-xs font-bold">抽取並發送題目</button>
+                </div>
+
+                <div id="relayDisplayCard" class="bg-gray-50 p-6 rounded-2xl text-center border border-gray-200 min-h-[120px] flex flex-col justify-center items-center">
+                    <p class="text-sm text-gray-400">等待主持人發送題目...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 頁籤三：團隊分組 -->
+        <section id="page-teams" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 space-y-4">
+                <h3 class="text-lg font-bold text-gray-900">🎲 線上動態洗牌分組器</h3>
+
+                <div class="host-only hidden space-y-3 bg-pink-50 p-4 rounded-2xl border border-pink-200">
+                    <div class="flex gap-4 items-center text-xs">
+                        <label class="font-bold text-gray-700">分組數量：</label>
+                        <select id="teamCountSelect" class="border border-gray-300 rounded-lg px-2 py-1 bg-white font-bold">
+                            <option value="3">分成 3 組</option>
+                            <option value="4" selected>分成 4 組</option>
+                        </select>
+                    </div>
+                    <button onclick="shuffleAndSyncTeams()" class="bg-crimson text-white px-4 py-2 rounded-xl text-xs font-bold w-full">開始洗牌分組</button>
+                </div>
+
+                <div id="teamsDisplayGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- 頁籤四：個人積分排行榜 -->
+        <section id="page-scoreboard" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">🏆 個人積分排行榜</h3>
+                    <span id="scoreboardScopeNotice" class="text-xs text-crimson font-bold bg-pink-soft px-3 py-1 rounded-full">🔥 同事視角：前 5 名榜單</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-gray-500 font-semibold bg-gray-50">
+                                <th class="p-3">排名</th>
+                                <th class="p-3">姓名</th>
+                                <th class="p-3">誰是臥底</th>
+                                <th class="p-3">比手畫腳</th>
+                                <th class="p-3">接力猜詞</th>
+                                <th class="p-3">隱藏任務</th>
+                                <th class="p-3 font-bold text-crimson">總積分</th>
+                                <th class="p-3 host-only hidden">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreboardTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 主持人密碼 Modal -->
+    <div id="hostModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xs w-full p-6 card-shadow space-y-4">
+            <h3 class="font-bold text-gray-900 text-center text-base">👑 主持人身分驗證</h3>
+            <input type="password" id="hostPasswordInput" placeholder="請輸入主持人密碼" class="border border-gray-300 rounded-xl w-full px-3 py-2.5 text-sm text-center focus:outline-none focus:border-crimson font-bold">
+            <div class="flex gap-2">
+                <button onclick="toggleHostModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-600">取消</button>
+                <button onclick="loginHost()" class="flex-1 py-2.5 rounded-xl bg-crimson text-white text-xs font-bold">登入驗證</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 動態管理名單 Modal -->
+    <div id="managePlayersModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="font-bold text-gray-900 text-center text-base">⚙ 管理同仁名單</h3>
+            <div class="flex gap-2">
+                <input type="text" id="newPlayerInput" placeholder="輸入姓名" class="border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold flex-grow">
+                <button onclick="addPlayer()" class="bg-crimson text-white px-4 py-2 rounded-xl text-xs font-bold">新增同仁</button>
+            </div>
+            <div class="text-xs text-gray-500">目前名單（點擊即可刪除）：</div>
+            <div id="managePlayersList" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl border border-gray-200"></div>
+            <button onclick="toggleManagePlayersModal()" class="w-full py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-600">關閉</button>
+        </div>
+    </div>
+
+    <!-- 主持人登記分數 Modal -->
+    <div id="editScoreModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xs w-full p-6 card-shadow space-y-4">
+            <h3 class="font-bold text-gray-900 text-center text-base">✏️ 登記／修改分數 - <span id="editScorePlayerName" class="text-crimson"></span></h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="font-bold text-gray-700 block mb-1">誰是臥底得分：</label>
+                    <input type="number" id="scoreInputUC" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
+                </div>
+                <div>
+                    <label class="font-bold text-gray-700 block mb-1">肢體比手畫腳得分：</label>
+                    <input type="number" id="scoreInputCH" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
+                </div>
+                <div>
+                    <label class="font-bold text-gray-700 block mb-1">接力猜詞得分：</label>
+                    <input type="number" id="scoreInputRE" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
+                </div>
+                <div>
+                    <label class="font-bold text-gray-700 block mb-1">隱藏任務得分：</label>
+                    <input type="number" id="scoreInputTASK" min="0" value="0" class="border border-gray-300 rounded-xl w-full px-3 py-2 text-center font-bold">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="toggleEditScoreModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-600">取消</button>
+                <button onclick="savePlayerScore()" class="flex-1 py-2.5 rounded-xl bg-crimson text-white text-xs font-bold">儲存分數</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxjghJe3PDp9R3ni9wx09ZDXd6tgT2t4Y",
+            authDomain: "youth-cpas-2026.firebaseapp.com",
+            databaseURL: "https://youth-cpas-2026-default-rtdb.firebaseio.com",
+            projectId: "youth-cpas-2026",
+            storageBucket: "youth-cpas-2026.firebasestorage.app",
+            messagingSenderId: "910395328964",
+            appId: "1:910395328964:web:e54e6d67e4d0453707fc91"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const DEFAULT_PLAYERS = ["小明", "小華", "小美", "阿強", "佳佳", "志明", "春嬌", "阿傑", "麗婷", "建宏", "雅婷", "家豪"];
+        let PLAYERS = [...DEFAULT_PLAYERS];
+
+        let myIdentity = localStorage.getItem('youth_user_identity') || '';
+        let isHost = false;
+        let editingPlayerName = '';
+
+        const CHARADES_BANK = ["追垃圾車", "踩到狗屎", "搶捷運座位", "被蚊子叮咬", "洗澡水突然變冷", "排隊買珍奶", "夜市撈金魚", "模特兒走秀", "外送員送餐", "盲人摸象", "畫蛇添足", "手忙腳亂", "加班趕底稿"];
+        const UNDERCOVER_BANK = [
+            { civilian: "珍珠奶茶", undercover: "波霸奶茶" },
+            { civilian: "會計師", undercover: "審計員" },
+            { civilian: "捷運", undercover: "公車" },
+            { civilian: "咖啡", undercover: "奶茶" }
+        ];
+        const RELAY_BANK = ["統一發票", "所得稅", "資產負債表", "加班費", "尾牙抽獎", "年終獎金", "咖啡機", "打卡鐘"];
+
+        let gameState = {};
+
+        window.onload = function() {
+            db.ref('partyState/players').on('value', snapshot => {
+                const val = snapshot.val();
+                if (val && Array.isArray(val) && val.length > 0) {
+                    PLAYERS = val;
+                } else {
+                    db.ref('partyState/players').set(DEFAULT_PLAYERS);
+                }
+                updateAllPlayerSelects();
+            });
+
+            db.ref('partyState').on('value', snapshot => {
+                gameState = snapshot.val() || {};
+                renderUCDisplay();
+                renderCharadesDisplay();
+                renderRelayDisplay();
+                if (gameState.teams) renderTeamsGrid(gameState.teams);
+                renderScoreboard();
+            });
+        };
+
+        function updateAllPlayerSelects() {
+            const select = document.getElementById('identitySelect');
+            const undercoverBox = document.getElementById('undercoverPlayerCheckboxes');
+            const charadesBox = document.getElementById('charadesPlayerCheckboxes');
+            const relaySelect = document.getElementById('relayGuesserSelect');
+
+            select.innerHTML = '<option value="">-- 請選擇您的姓名 --</option>';
+            undercoverBox.innerHTML = '';
+            charadesBox.innerHTML = '';
+            relaySelect.innerHTML = '';
+
+            PLAYERS.forEach(name => {
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+                undercoverBox.innerHTML += `<label class="flex items-center gap-1 font-bold"><input type="checkbox" value="${name}" class="uc-cb"> ${name}</label>`;
+                charadesBox.innerHTML += `<label class="flex items-center gap-1 font-bold"><input type="checkbox" value="${name}" class="ch-cb"> ${name}</label>`;
+                relaySelect.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+
+            if (myIdentity && PLAYERS.includes(myIdentity)) {
+                select.value = myIdentity;
+            }
+            updateIdentityUI();
+            renderManagePlayersList();
+            renderScoreboard();
+        }
+
+        function toggleManagePlayersModal() {
+            document.getElementById('managePlayersModal').classList.toggle('hidden');
+        }
+
+        function renderManagePlayersList() {
+            const container = document.getElementById('managePlayersList');
+            container.innerHTML = '';
+            PLAYERS.forEach((name, idx) => {
+                container.innerHTML += `
+                    <span class="bg-white border border-gray-300 text-gray-800 text-xs px-2.5 py-1 rounded-xl font-bold flex items-center gap-1">
+                        ${name}
+                        <button onclick="removePlayer(${idx})" class="text-crimson hover:text-red-700 font-bold ml-1">×</button>
+                    </span>
+                `;
+            });
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('newPlayerInput');
+            const name = input.value.trim();
+            if (name && !PLAYERS.includes(name)) {
+                PLAYERS.push(name);
+                db.ref('partyState/players').set(PLAYERS);
+                input.value = '';
+            }
+        }
+
+        function removePlayer(idx) {
+            PLAYERS.splice(idx, 1);
+            db.ref('partyState/players').set(PLAYERS);
+        }
+
+        function setUserIdentity(name) {
+            myIdentity = name;
+            localStorage.setItem('youth_user_identity', name);
+            updateIdentityUI();
+            renderUCDisplay();
+            renderCharadesDisplay();
+            renderRelayDisplay();
+        }
+
+        function updateIdentityUI() {
+            const tag = document.getElementById('userIdentityTag');
+            tag.innerText = myIdentity ? `👤 ${myIdentity}` : '👤 未選擇身份';
+        }
+
+        function switchTab(tabKey) {
+            ['flow', 'games', 'teams', 'scoreboard'].forEach(key => {
+                document.getElementById(`page-${key}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${key}`);
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+            document.getElementById(`page-${tabKey}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabKey}`);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-gray-600');
+        }
+
+        function toggleHostModal() {
+            document.getElementById('hostModal').classList.toggle('hidden');
+        }
+
+        function loginHost() {
+            const pass = document.getElementById('hostPasswordInput').value;
+            if (pass === '0825') {
+                isHost = true;
+                document.getElementById('hostStatusText').innerText = '主持人模式';
+                document.getElementById('hostLockIcon').innerText = '🔓';
+                document.querySelectorAll('.host-only').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('scoreboardScopeNotice').innerText = '👑 主持人全員管理視角';
+                toggleHostModal();
+                renderUCDisplay();
+                renderCharadesDisplay();
+                renderRelayDisplay();
+                renderScoreboard();
+            } else {
+                alert('密碼驗證錯誤！');
+            }
+        }
+
+        // --- 排行榜登記與呈現 (一般同事前五名、主持人全看) ---
+        function openEditScoreModal(name) {
+            editingPlayerName = name;
+            document.getElementById('editScorePlayerName').innerText = name;
+            const scores = (gameState.scores && gameState.scores[name]) || { uc: 0, ch: 0, re: 0, task: 0 };
+            document.getElementById('scoreInputUC').value = scores.uc || 0;
+            document.getElementById('scoreInputCH').value = scores.ch || 0;
+            document.getElementById('scoreInputRE').value = scores.re || 0;
+            document.getElementById('scoreInputTASK').value = scores.task || 0;
+            document.getElementById('editScoreModal').classList.remove('hidden');
+        }
+
+        function toggleEditScoreModal() {
+            document.getElementById('editScoreModal').classList.add('hidden');
+        }
+
+        function savePlayerScore() {
+            if (!editingPlayerName) return;
+            const uc = parseInt(document.getElementById('scoreInputUC').value) || 0;
+            const ch = parseInt(document.getElementById('scoreInputCH').value) || 0;
+            const re = parseInt(document.getElementById('scoreInputRE').value) || 0;
+            const task = parseInt(document.getElementById('scoreInputTASK').value) || 0;
+
+            db.ref(`partyState/scores/${editingPlayerName}`).set({ uc, ch, re, task }, () => {
+                toggleEditScoreModal();
+            });
+        }
+
+        function renderScoreboard() {
+            const tbody = document.getElementById('scoreboardTableBody');
+            tbody.innerHTML = '';
+
+            const scoresData = gameState.scores || {};
+
+            let list = PLAYERS.map(name => {
+                const s = scoresData[name] || { uc: 0, ch: 0, re: 0, task: 0 };
+                const total = (s.uc || 0) + (s.ch || 0) + (s.re || 0) + (s.task || 0);
+                return { name, uc: s.uc || 0, ch: s.ch || 0, re: s.re || 0, task: s.task || 0, total };
+            });
+
+            // 依總分由高到低排序
+            list.sort((a, b) => b.total - a.total);
+
+            // 一般同事僅能看到前 5 名，主持人可看到所有人
+            const displayList = isHost ? list : list.slice(0, 5);
+
+            displayList.forEach((item, idx) => {
+                const rankBadge = idx === 0 ? '🥇 1' : (idx === 1 ? '🥈 2' : (idx === 2 ? '🥉 3' : `${idx + 1}`));
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-bold ${idx < 3 ? 'text-crimson' : 'text-gray-500'}">${rankBadge}</td>
+                        <td class="p-3 font-bold text-gray-800">${item.name}</td>
+                        <td class="p-3">${item.uc}</td>
+                        <td class="p-3">${item.ch}</td>
+                        <td class="p-3">${item.re}</td>
+                        <td class="p-3">${item.task}</td>
+                        <td class="p-3 font-black text-crimson text-sm">${item.total}</td>
+                        ${isHost ? `<td class="p-3"><button onclick="openEditScoreModal('${item.name}')" class="bg-gray-800 text-white px-2.5 py-1 rounded-lg text-xs font-bold">✏️ 登記分</button></td>` : ''}
+                    </tr>
+                `;
+            });
+        }
+
+        // --- 遊戲邏輯與渲染 ---
+        function sendUndercoverLobby() {
+            const selected = Array.from(document.querySelectorAll('.uc-cb:checked')).map(cb => cb.value);
+            if (selected.length < 3) { alert('請至少選擇 3 位上場夥伴！'); return; }
+            db.ref('partyState/undercover').set({ players: selected, started: false, readyPlayers: [] });
+        }
+
+        function joinUCLobby() {
+            if (!myIdentity) { alert('請先選擇您的姓名綁定身份！'); return; }
+            const current = gameState.undercover;
+            if (current && (!current.readyPlayers || !current.readyPlayers.includes(myIdentity))) {
+                const updatedReady = current.readyPlayers ? [...current.readyPlayers, myIdentity] : [myIdentity];
+                db.ref('partyState/undercover/readyPlayers').set(updatedReady);
+            }
+        }
+
+        function startUndercoverGame() {
+            const current = gameState.undercover;
+            if (!current || !current.players) return;
+            const pair = UNDERCOVER_BANK[Math.floor(Math.random() * UNDERCOVER_BANK.length)];
+            const ucIndex = Math.floor(Math.random() * current.players.length);
+            db.ref('partyState/undercover').update({ started: true, pair: pair, undercoverPlayer: current.players[ucIndex] });
+        }
+
+        function renderUCDisplay() {
+            const card = document.getElementById('undercoverDisplayCard');
+            const ucState = gameState.undercover;
+            if (!ucState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人啟動遊戲...</p>'; return; }
+
+            const readyList = ucState.readyPlayers || [];
+
+            if (!ucState.started) {
+                const isInvited = ucState.players.includes(myIdentity);
+                const isReady = readyList.includes(myIdentity);
+                card.innerHTML = `
+                    <p class="text-sm font-bold text-gray-800 mb-2">本局上場玩家：${ucState.players.join(', ')}</p>
+                    <p class="text-xs text-crimson font-bold mb-3">準備入場進度：${readyList.length} / ${ucState.players.length}</p>
+                    ${isInvited ? (isReady ? '<span class="text-xs text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-200">✓ 已成功入場，等待主持人發牌</span>' : `<button onclick="joinUCLobby()" class="bg-crimson text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-red-700 transition">點擊確認入場</button>`) : '<span class="text-xs text-gray-400">您是台下觀眾，請準備看台上表現競猜！</span>'}
+                `;
+                return;
+            }
+
+            if (isHost) {
+                card.innerHTML = `
+                    <p class="text-xs text-crimson font-bold mb-1">👑 主持人控場視角</p>
+                    <p class="text-sm text-gray-800">平民詞彙：<strong>${ucState.pair.civilian}</strong></p>
+                    <p class="text-sm text-crimson font-bold mt-1">卧底是：<strong>${ucState.undercoverPlayer}</strong>（詞彙：${ucState.pair.undercover}）</p>
+                `;
+            } else if (ucState.players.includes(myIdentity)) {
+                const myWord = (myIdentity === ucState.undercoverPlayer) ? ucState.pair.undercover : ucState.pair.civilian;
+                card.innerHTML = `
+                    <p class="text-xs text-gray-500 font-bold">您的專屬詞彙（請妥善保密）：</p>
+                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${myWord}</p>
+                    <p class="text-xs text-gray-400">請準備輪流進行描述！</p>
+                `;
+            } else {
+                card.innerHTML = `
+                    <p class="text-base font-bold text-gray-800">🕵️ 遊戲熱烈進行中！</p>
+                    <p class="text-xs text-gray-500 mt-1">台下觀眾請認真觀察發言，準備找出臥底得積分！</p>
+                `;
+            }
+        }
+
+        function drawCharadesTopic() {
+            const selected = Array.from(document.querySelectorAll('.ch-cb:checked')).map(cb => cb.value);
+            const topic = CHARADES_BANK[Math.floor(Math.random() * CHARADES_BANK.length)];
+            db.ref('partyState/charades').set({ players: selected, topic: topic });
+        }
+
+        function renderCharadesDisplay() {
+            const card = document.getElementById('charadesDisplayCard');
+            const chState = gameState.charades;
+            if (!chState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人抽題...</p>'; return; }
+
+            const isOnStage = (chState.players || []).includes(myIdentity);
+
+            if (isOnStage && !isHost) {
+                card.innerHTML = `
+                    <p class="text-base font-bold text-gray-800">🙈 題目已為台上猜題者遮蔽</p>
+                    <p class="text-xs text-crimson font-bold mt-1">請觀看隊友肢體動作並回答答案！</p>
+                `;
+            } else {
+                card.innerHTML = `
+                    <p class="text-xs text-gray-400 font-bold">當前題目（觀眾／比劃者視角）：</p>
+                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${chState.topic || '（等待抽題）'}</p>
+                `;
+            }
+        }
+
+        function drawRelayTopic() {
+            const guesser = document.getElementById('relayGuesserSelect').value;
+            const topic = RELAY_BANK[Math.floor(Math.random() * RELAY_BANK.length)];
+            db.ref('partyState/relay').set({ guesser: guesser, topic: topic });
+        }
+
+        function renderRelayDisplay() {
+            const card = document.getElementById('relayDisplayCard');
+            const relayState = gameState.relay;
+            if (!relayState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人發送題目...</p>'; return; }
+
+            const isGuesser = (myIdentity === relayState.guesser);
+
+            if (isGuesser && !isHost) {
+                card.innerHTML = `
+                    <p class="text-base font-bold text-gray-800">🙈 您是當前猜題者</p>
+                    <p class="text-xs text-crimson font-bold mt-1">請專心聽隊友提示並回答！</p>
+                `;
+            } else {
+                card.innerHTML = `
+                    <p class="text-xs text-gray-400 font-bold">當前題目（提示隊友與觀眾視角）：</p>
+                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${relayState.topic || '（等待發送）'}</p>
+                    <p class="text-xs text-gray-600 font-bold">當前猜題者：${relayState.guesser || '未指定'}</p>
+                `;
+            }
+        }
+
+        function shuffleAndSyncTeams() {
+            const count = parseInt(document.getElementById('teamCountSelect').value);
+            const shuffled = [...PLAYERS].sort(() => Math.random() - 0.5);
+            const teams = Array.from({ length: count }, () => []);
+            shuffled.forEach((name, idx) => teams[idx % count].push(name));
+            db.ref('partyState/teams').set(teams);
+        }
+
+        function renderTeamsGrid(teams) {
+            const grid = document.getElementById('teamsDisplayGrid');
+            grid.innerHTML = '';
+            (teams || []).forEach((group, idx) => {
+                grid.innerHTML += `
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <div class="font-bold text-crimson text-sm mb-2">第 ${idx + 1} 小隊</div>
+                        <div class="flex flex-wrap gap-2">${group.map(n => `<span class="bg-white border border-gray-200 px-3 py-1 rounded-xl text-xs text-gray-800 font-bold">${n}</span>`).join('')}</div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

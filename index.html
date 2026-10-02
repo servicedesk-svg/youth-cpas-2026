@@ -53,13 +53,14 @@
         <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="text-sm">
                 <span class="font-bold text-gray-800">📲 請選擇您的姓名綁定手機身份：</span>
-                <span class="text-xs text-gray-500 block sm:inline">（系統會依據身份顯示發牌或遮蔽題目）</span>
+                <span id="lockStatusNotice" class="text-xs text-gray-500 block sm:inline">（選擇後即綁定防偷看）</span>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
                 <select id="identitySelect" onchange="setUserIdentity(this.value)" class="border border-gray-300 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-gray-800 focus:outline-none focus:border-crimson flex-grow">
                     <option value="">-- 請選擇您的姓名 --</option>
                 </select>
                 <button onclick="toggleManagePlayersModal()" class="host-only hidden bg-gray-800 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">⚙️ 管理名單</button>
+                <button onclick="resetAllGameData()" class="host-only hidden bg-blue-600 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0 shadow-sm hover:bg-blue-700">🧹 一鍵清空重置</button>
             </div>
         </div>
 
@@ -365,6 +366,17 @@
             renderScoreboard();
         }
 
+        function resetAllGameData() {
+            if (confirm('確定要清空並重置所有遊戲狀態、分組與分數嗎？（當天活動前建議重置一次）')) {
+                db.ref('partyState/undercover').remove();
+                db.ref('partyState/charades').remove();
+                db.ref('partyState/relay').remove();
+                db.ref('partyState/teams').remove();
+                db.ref('partyState/scores').remove();
+                alert('所有測試資料已成功歸零，網頁已恢復為全新狀態！');
+            }
+        }
+
         function toggleManagePlayersModal() {
             document.getElementById('managePlayersModal').classList.toggle('hidden');
         }
@@ -397,7 +409,9 @@
             db.ref('partyState/players').set(PLAYERS);
         }
 
+        // --- 綁定身份與防偷看鎖定邏輯 ---
         function setUserIdentity(name) {
+            if (!name) return;
             myIdentity = name;
             localStorage.setItem('youth_user_identity', name);
             updateIdentityUI();
@@ -408,7 +422,31 @@
 
         function updateIdentityUI() {
             const tag = document.getElementById('userIdentityTag');
-            tag.innerText = myIdentity ? `👤 ${myIdentity}` : '👤 未選擇身份';
+            const select = document.getElementById('identitySelect');
+            const notice = document.getElementById('lockStatusNotice');
+
+            if (myIdentity) {
+                tag.innerText = `👤 ${myIdentity}`;
+                select.value = myIdentity;
+
+                // 若非主持人視角，選擇後立刻鎖定下拉選單
+                if (!isHost) {
+                    select.disabled = true;
+                    select.classList.add('opacity-75', 'cursor-not-allowed', 'bg-gray-200');
+                    notice.innerText = '🔒 身份已鎖定（如需修正請聯繫主持人）';
+                    notice.classList.remove('text-gray-500');
+                    notice.classList.add('text-crimson', 'font-bold');
+                } else {
+                    select.disabled = false;
+                    select.classList.remove('opacity-75', 'cursor-not-allowed', 'bg-gray-200');
+                    notice.innerText = '🔓 主持人模式（可自由切換身份）';
+                }
+            } else {
+                tag.innerText = '👤 未選擇身份';
+                select.disabled = false;
+                select.classList.remove('opacity-75', 'cursor-not-allowed', 'bg-gray-200');
+                notice.innerText = '（選擇後即綁定防偷看）';
+            }
         }
 
         function switchTab(tabKey) {
@@ -437,6 +475,7 @@
                 document.querySelectorAll('.host-only').forEach(el => el.classList.remove('hidden'));
                 document.getElementById('scoreboardScopeNotice').innerText = '👑 主持人全員管理視角';
                 toggleHostModal();
+                updateIdentityUI();
                 renderUCDisplay();
                 renderCharadesDisplay();
                 renderRelayDisplay();
@@ -531,7 +570,7 @@
         function renderUCDisplay() {
             const card = document.getElementById('undercoverDisplayCard');
             const ucState = gameState.undercover;
-            if (!ucState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人啟動遊戲...</p>'; return; }
+            if (!ucState || !ucState.players) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人啟動遊戲...</p>'; return; }
 
             const readyList = ucState.readyPlayers || [];
 
@@ -576,7 +615,7 @@
         function renderCharadesDisplay() {
             const card = document.getElementById('charadesDisplayCard');
             const chState = gameState.charades;
-            if (!chState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人抽題...</p>'; return; }
+            if (!chState || !chState.topic) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人抽題...</p>'; return; }
 
             const isOnStage = (chState.players || []).includes(myIdentity);
 
@@ -588,7 +627,7 @@
             } else {
                 card.innerHTML = `
                     <p class="text-xs text-gray-400 font-bold">當前題目（觀眾／比劃者視角）：</p>
-                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${chState.topic || '（等待抽題）'}</p>
+                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${chState.topic}</p>
                 `;
             }
         }
@@ -602,7 +641,7 @@
         function renderRelayDisplay() {
             const card = document.getElementById('relayDisplayCard');
             const relayState = gameState.relay;
-            if (!relayState) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人發送題目...</p>'; return; }
+            if (!relayState || !relayState.topic) { card.innerHTML = '<p class="text-sm text-gray-400">等待主持人發送題目...</p>'; return; }
 
             const isGuesser = (myIdentity === relayState.guesser);
 
@@ -614,7 +653,7 @@
             } else {
                 card.innerHTML = `
                     <p class="text-xs text-gray-400 font-bold">當前題目（提示隊友與觀眾視角）：</p>
-                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${relayState.topic || '（等待發送）'}</p>
+                    <p class="text-3xl font-black text-crimson my-2 tracking-wide">${relayState.topic}</p>
                     <p class="text-xs text-gray-600 font-bold">當前猜題者：${relayState.guesser || '未指定'}</p>
                 `;
             }
@@ -631,7 +670,11 @@
         function renderTeamsGrid(teams) {
             const grid = document.getElementById('teamsDisplayGrid');
             grid.innerHTML = '';
-            (teams || []).forEach((group, idx) => {
+            if (!teams || teams.length === 0) {
+                grid.innerHTML = '<p class="text-xs text-gray-400 text-center col-span-2 py-4">等待主持人點擊洗牌分組...</p>';
+                return;
+            }
+            teams.forEach((group, idx) => {
                 grid.innerHTML += `
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                         <div class="font-bold text-crimson text-sm mb-2">第 ${idx + 1} 小隊</div>

@@ -16,6 +16,7 @@
         .bg-pink-soft { background-color: #FCE2E6; }
         .card-shadow { box-shadow: 0 10px 25px -5px rgba(208, 50, 75, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03); }
         .nav-btn.active { background-color: #D0324B; color: white; font-weight: bold; }
+        .draw-tab-btn.active { background-color: #D0324B; color: white; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-12">
@@ -44,6 +45,7 @@
             <button onclick="switchTab('games')" id="tab-games" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">遊戲機制與工具</button>
             <button onclick="switchTab('teams')" id="tab-teams" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">團隊隨機分組器</button>
             <button onclick="switchTab('scoreboard')" id="tab-scoreboard" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">個人積分排行榜</button>
+            <button onclick="switchTab('draw')" id="tab-draw" class="nav-btn px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">🎰 老闆抽籤筒</button>
         </div>
     </header>
 
@@ -84,7 +86,7 @@
                         <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">新星幸運抽</span>
                             <h3 class="font-bold text-gray-800 mt-1">一年以下同仁摸彩</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">老闆現場抽出上台順序，同仁親自從籤筒抽取大獎並揭曉！</p>
+                            <p class="text-xs text-gray-500 mt-0.5">老闆線上抽出上台順序，同仁依序上台抽取獎項！</p>
                         </div>
                     </div>
                     <div class="flex gap-4 items-start pb-3 border-b border-gray-100">
@@ -100,7 +102,7 @@
                         <div>
                             <span class="text-xs font-bold text-crimson bg-pink-soft px-2 py-0.5 rounded">資深幸運抽</span>
                             <h3 class="font-bold text-gray-800 mt-1">一年以上同仁摸彩</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">由老闆現場抽出上台順序，同仁依序上台抽籤現場揭曉大獎！</p>
+                            <p class="text-xs text-gray-500 mt-0.5">老闆線上抽出上台順序，同仁依序上台抽取獎項！</p>
                         </div>
                     </div>
                     <div class="flex gap-4 items-start">
@@ -258,6 +260,58 @@
             </div>
         </section>
 
+        <!-- 頁籤五：老闆抽籤筒（支援年資雙籤筒） -->
+        <section id="page-draw" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 text-center space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 pb-3 gap-3">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <span class="w-2.5 h-6 bg-crimson rounded-full inline-block"></span>🎰 老闆線上抽籤筒
+                    </h3>
+                    
+                    <!-- 籤筒切換鈕 -->
+                    <div class="flex gap-2 bg-gray-100 p-1 rounded-2xl text-xs font-bold w-full sm:w-auto">
+                        <button onclick="switchDrawCategory('over1')" id="drawCatBtn-over1" class="draw-tab-btn active flex-1 sm:flex-none px-4 py-1.5 rounded-xl transition">🌱 一年以上籤筒</button>
+                        <button onclick="switchDrawCategory('under1')" id="drawCatBtn-under1" class="draw-tab-btn flex-1 sm:flex-none px-4 py-1.5 rounded-xl text-gray-600 transition">🐣 一年以下籤筒</button>
+                    </div>
+                </div>
+
+                <!-- 抽籤控制與動態大字顯示 -->
+                <div class="bg-gradient-to-b from-pink-50 to-white p-8 rounded-3xl border border-pink-100 space-y-4">
+                    <div id="latestDrawResult" class="min-h-[100px] flex flex-col justify-center items-center">
+                        <p class="text-sm text-gray-400 font-bold">請老闆點擊下方按鈕抽取上台同仁！</p>
+                    </div>
+
+                    <div class="flex justify-center gap-3">
+                        <button onclick="drawLuckyPlayer()" class="bg-crimson text-white font-black text-lg px-8 py-4 rounded-2xl shadow-lg hover:bg-red-700 active:scale-95 transition transform hover:-translate-y-0.5">
+                            🎲 抽出上台同仁！
+                        </button>
+                        <button onclick="resetCurrentDrawPool()" class="host-only hidden bg-gray-800 text-white px-4 py-4 rounded-2xl text-xs font-bold shrink-0">🔄 重置此籤筒</button>
+                    </div>
+                </div>
+
+                <!-- 名單狀態公開池 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <!-- 籤筒內名單 -->
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <div class="font-bold text-xs text-gray-700 mb-2 flex justify-between items-center">
+                            <span>🎰 <span id="poolCategoryTitle">一年以上</span>待抽取名單：</span>
+                            <span id="remainingCountTag" class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="remainingPlayersPool" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pt-1"></div>
+                    </div>
+
+                    <!-- 已抽出順序名單 -->
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <div class="font-bold text-xs text-gray-700 mb-2 flex justify-between items-center">
+                            <span>📋 <span id="drawnCategoryTitle">一年以上</span>已抽出順序名單：</span>
+                            <span id="drawnCountTag" class="bg-crimson text-white px-2 py-0.5 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="drawnPlayersPool" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pt-1"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- 主持人密碼 Modal -->
@@ -272,16 +326,20 @@
         </div>
     </div>
 
-    <!-- 動態管理名單 Modal -->
+    <!-- 動態管理名單 Modal（含年資標記設定） -->
     <div id="managePlayersModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-gray-900 text-center text-base">⚙ 管理同仁名單</h3>
+            <h3 class="font-bold text-gray-900 text-center text-base">⚙ 管理同仁名單與年資標記</h3>
             <div class="flex gap-2">
                 <input type="text" id="newPlayerInput" placeholder="輸入姓名" class="border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold flex-grow">
-                <button onclick="addPlayer()" class="bg-crimson text-white px-4 py-2 rounded-xl text-xs font-bold">新增同仁</button>
+                <select id="newPlayerTypeSelect" class="border border-gray-300 rounded-xl px-2 py-2 text-xs font-bold bg-gray-50">
+                    <option value="over1">🌱 一年以上</option>
+                    <option value="under1">🐣 一年以下</option>
+                </select>
+                <button onclick="addPlayer()" class="bg-crimson text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">新增</button>
             </div>
-            <div class="text-xs text-gray-500">目前名單（點擊即可刪除）：</div>
-            <div id="managePlayersList" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl border border-gray-200"></div>
+            <div class="text-xs text-gray-500">目前名單（點擊類別按鈕可切換年資標記，點 × 可刪除）：</div>
+            <div id="managePlayersList" class="flex flex-col gap-2 max-h-56 overflow-y-auto p-2 bg-gray-50 rounded-xl border border-gray-200"></div>
             <button onclick="toggleManagePlayersModal()" class="w-full py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-600">關閉</button>
         </div>
     </div>
@@ -329,12 +387,20 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const DEFAULT_PLAYERS = ["小明", "小華", "小美", "阿強", "佳佳", "志明", "春嬌", "阿傑", "麗婷", "建宏", "雅婷", "家豪"];
-        let PLAYERS = [...DEFAULT_PLAYERS];
+        const DEFAULT_PLAYERS_DATA = [
+            { name: "小明", type: "over1" }, { name: "小華", type: "over1" }, { name: "小美", type: "over1" },
+            { name: "阿強", type: "over1" }, { name: "佳佳", type: "over1" }, { name: "志明", type: "over1" },
+            { name: "春嬌", type: "under1" }, { name: "阿傑", type: "under1" }, { name: "麗婷", type: "under1" },
+            { name: "建宏", type: "under1" }, { name: "雅婷", type: "under1" }, { name: "家豪", type: "under1" }
+        ];
+
+        let PLAYERS_DATA = [...DEFAULT_PLAYERS_DATA];
+        let PLAYERS = PLAYERS_DATA.map(p => p.name);
 
         let myIdentity = localStorage.getItem('youth_user_identity') || '';
         let isHost = false;
         let editingPlayerName = '';
+        let currentDrawCat = 'over1'; // 預設一年以上
 
         // --- 超大型題庫：120+ 題比手畫腳 ---
         const RAW_CHARADES_BANK = [
@@ -411,13 +477,14 @@
         let gameState = {};
 
         window.onload = function() {
-            db.ref('partyState/players').on('value', snapshot => {
+            db.ref('partyState/playersData').on('value', snapshot => {
                 const val = snapshot.val();
                 if (val && Array.isArray(val) && val.length > 0) {
-                    PLAYERS = val;
+                    PLAYERS_DATA = val;
                 } else {
-                    db.ref('partyState/players').set(DEFAULT_PLAYERS);
+                    db.ref('partyState/playersData').set(DEFAULT_PLAYERS_DATA);
                 }
+                PLAYERS = PLAYERS_DATA.map(p => p.name);
                 updateAllPlayerSelects();
             });
 
@@ -428,6 +495,7 @@
                 renderRelayDisplay();
                 if (gameState.teams) renderTeamsGrid(gameState.teams);
                 renderScoreboard();
+                renderDrawPools();
             });
         };
 
@@ -455,16 +523,19 @@
             updateIdentityUI();
             renderManagePlayersList();
             renderScoreboard();
+            renderDrawPools();
         }
 
         function resetAllGameData() {
-            if (confirm('確定要清空並重置所有遊戲狀態、題庫歷史、分組與分數嗎？（當天活動前建議重置一次）')) {
+            if (confirm('確定要清空並重置所有遊戲狀態、題庫歷史、抽籤筒、分組與分數嗎？（當天活動前建議重置一次）')) {
                 db.ref('partyState/undercover').remove();
                 db.ref('partyState/charades').remove();
                 db.ref('partyState/relay').remove();
                 db.ref('partyState/usedCharades').remove();
                 db.ref('partyState/usedRelay').remove();
                 db.ref('partyState/usedUC').remove();
+                db.ref('partyState/drawnPlayers_over1').remove();
+                db.ref('partyState/drawnPlayers_under1').remove();
                 db.ref('partyState/teams').remove();
                 db.ref('partyState/scores').remove();
                 alert('所有測試資料與題庫歷史已成功歸零，網頁已恢復為全新狀態！');
@@ -478,29 +549,41 @@
         function renderManagePlayersList() {
             const container = document.getElementById('managePlayersList');
             container.innerHTML = '';
-            PLAYERS.forEach((name, idx) => {
+            PLAYERS_DATA.forEach((item, idx) => {
+                const tagText = item.type === 'under1' ? '🐣 一年以下' : '🌱 一年以上';
+                const tagBg = item.type === 'under1' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800';
                 container.innerHTML += `
-                    <span class="bg-white border border-gray-300 text-gray-800 text-xs px-2.5 py-1 rounded-xl font-bold flex items-center gap-1">
-                        ${name}
-                        <button onclick="removePlayer(${idx})" class="text-crimson hover:text-red-700 font-bold ml-1">×</button>
-                    </span>
+                    <div class="flex justify-between items-center bg-white border border-gray-200 p-2 rounded-xl text-xs font-bold">
+                        <span class="text-gray-800">${item.name}</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="togglePlayerType(${idx})" class="${tagBg} px-2.5 py-1 rounded-lg hover:opacity-80 transition">${tagText}</button>
+                            <button onclick="removePlayer(${idx})" class="text-crimson hover:text-red-700 font-bold px-1 text-sm">×</button>
+                        </div>
+                    </div>
                 `;
             });
         }
 
+        function togglePlayerType(idx) {
+            PLAYERS_DATA[idx].type = PLAYERS_DATA[idx].type === 'under1' ? 'over1' : 'under1';
+            db.ref('partyState/playersData').set(PLAYERS_DATA);
+        }
+
         function addPlayer() {
             const input = document.getElementById('newPlayerInput');
+            const typeSelect = document.getElementById('newPlayerTypeSelect');
             const name = input.value.trim();
+            const type = typeSelect.value;
             if (name && !PLAYERS.includes(name)) {
-                PLAYERS.push(name);
-                db.ref('partyState/players').set(PLAYERS);
+                PLAYERS_DATA.push({ name, type });
+                db.ref('partyState/playersData').set(PLAYERS_DATA);
                 input.value = '';
             }
         }
 
         function removePlayer(idx) {
-            PLAYERS.splice(idx, 1);
-            db.ref('partyState/players').set(PLAYERS);
+            PLAYERS_DATA.splice(idx, 1);
+            db.ref('partyState/playersData').set(PLAYERS_DATA);
         }
 
         function setUserIdentity(name) {
@@ -542,7 +625,7 @@
         }
 
         function switchTab(tabKey) {
-            ['flow', 'games', 'teams', 'scoreboard'].forEach(key => {
+            ['flow', 'games', 'teams', 'scoreboard', 'draw'].forEach(key => {
                 document.getElementById(`page-${key}`).classList.add('hidden');
                 const btn = document.getElementById(`tab-${key}`);
                 btn.classList.remove('active');
@@ -574,6 +657,89 @@
                 renderScoreboard();
             } else {
                 alert('密碼驗證錯誤！');
+            }
+        }
+
+        // --- 老闆雙籤筒抽籤邏輯 ---
+        function switchDrawCategory(cat) {
+            currentDrawCat = cat;
+            document.querySelectorAll('.draw-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+            const activeBtn = document.getElementById(`drawCatBtn-${cat}`);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-gray-600');
+
+            const title = cat === 'under1' ? '一年以下' : '一年以上';
+            document.getElementById('poolCategoryTitle').innerText = title;
+            document.getElementById('drawnCategoryTitle').innerText = title;
+
+            renderDrawPools();
+        }
+
+        function drawLuckyPlayer() {
+            const dbKey = `partyState/drawnPlayers_${currentDrawCat}`;
+            const drawn = gameState[`drawnPlayers_${currentDrawCat}`] || [];
+
+            // 根據年資過濾目標同仁
+            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat).map(p => p.name);
+            const remaining = targetPool.filter(p => !drawn.includes(p));
+
+            const categoryName = currentDrawCat === 'under1' ? '一年以下' : '一年以上';
+
+            if (remaining.length === 0) {
+                alert(`「${categoryName}」籤筒內的所有同仁都已經被抽過囉！如需重新抽取，請點擊「重置此籤筒」。`);
+                return;
+            }
+
+            const luckyName = remaining[Math.floor(Math.random() * remaining.length)];
+            const updatedDrawn = [...drawn, luckyName];
+
+            db.ref(dbKey).set(updatedDrawn);
+        }
+
+        function resetCurrentDrawPool() {
+            const categoryName = currentDrawCat === 'under1' ? '一年以下' : '一年以上';
+            if (confirm(`確定要清空「${categoryName}」已抽出的名單、重新重置該籤筒嗎？`)) {
+                db.ref(`partyState/drawnPlayers_${currentDrawCat}`).remove();
+            }
+        }
+
+        function renderDrawPools() {
+            const dbKey = `drawnPlayers_${currentDrawCat}`;
+            const drawn = gameState[dbKey] || [];
+
+            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat).map(p => p.name);
+            const remaining = targetPool.filter(p => !drawn.includes(p));
+
+            document.getElementById('remainingCountTag').innerText = `${remaining.length} 人`;
+            document.getElementById('drawnCountTag').innerText = `${drawn.length} 人`;
+
+            const remainingContainer = document.getElementById('remainingPlayersPool');
+            remainingContainer.innerHTML = '';
+            remaining.forEach(name => {
+                remainingContainer.innerHTML += `<span class="bg-white border border-gray-200 text-gray-800 text-xs px-2.5 py-1 rounded-xl font-bold">${name}</span>`;
+            });
+
+            const drawnContainer = document.getElementById('drawnPlayersPool');
+            drawnContainer.innerHTML = '';
+            drawn.forEach((name, idx) => {
+                drawnContainer.innerHTML += `<span class="bg-pink-soft text-crimson border border-pink-200 text-xs px-2.5 py-1 rounded-xl font-bold flex items-center gap-1"><span class="text-[10px] text-red-400">#${idx+1}</span> ${name}</span>`;
+            });
+
+            const resultContainer = document.getElementById('latestDrawResult');
+            const categoryTitle = currentDrawCat === 'under1' ? '一年以下' : '一年以上';
+
+            if (drawn.length > 0) {
+                const latest = drawn[drawn.length - 1];
+                resultContainer.innerHTML = `
+                    <p class="text-xs text-crimson font-bold tracking-widest uppercase mb-1">【${categoryTitle}】請上台抽獎</p>
+                    <p class="text-4xl sm:text-5xl font-black text-crimson tracking-wider animate-bounce my-2">${latest}</p>
+                    <p class="text-xs text-gray-500 font-bold">請同仁依序上台抽籤揭曉大獎！</p>
+                `;
+            } else {
+                resultContainer.innerHTML = `<p class="text-sm text-gray-400 font-bold">目前為【${categoryTitle}】籤筒，請點擊下方按鈕進行抽籤！</p>`;
             }
         }
 

@@ -260,7 +260,7 @@
             </div>
         </section>
 
-        <!-- 頁籤五：老闆抽籤筒（支援年資雙籤筒） -->
+        <!-- 頁籤五：老闆抽籤筒（支援年資雙籤筒且抽籤權限受控） -->
         <section id="page-draw" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 text-center space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 pb-3 gap-3">
@@ -277,15 +277,19 @@
 
                 <!-- 抽籤控制與動態大字顯示 -->
                 <div class="bg-gradient-to-b from-pink-50 to-white p-8 rounded-3xl border border-pink-100 space-y-4">
-                    <div id="latestDrawResult" class="min-h-[100px] flex flex-col justify-center items-center">
-                        <p class="text-sm text-gray-400 font-bold">請老闆點擊下方按鈕抽取上台同仁！</p>
+                    <!-- 超大動態字卡展示區 -->
+                    <div id="latestDrawResult" class="min-h-[140px] flex flex-col justify-center items-center">
+                        <p class="text-sm text-gray-400 font-bold">等待主持人/老闆進行抽籤...</p>
                     </div>
 
-                    <div class="flex justify-center gap-3">
-                        <button onclick="drawLuckyPlayer()" class="bg-crimson text-white font-black text-lg px-8 py-4 rounded-2xl shadow-lg hover:bg-red-700 active:scale-95 transition transform hover:-translate-y-0.5">
-                            🎲 抽出上台同仁！
+                    <!-- 僅限主持人可見與操作的抽籤按鈕 -->
+                    <div class="host-only hidden flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button onclick="drawLuckyPlayer()" class="bg-crimson text-white font-black text-lg px-8 py-3.5 rounded-2xl shadow-lg hover:bg-red-700 active:scale-95 transition transform hover:-translate-y-0.5">
+                            🎲 點擊抽出上台同仁！
                         </button>
-                        <button onclick="resetCurrentDrawPool()" class="host-only hidden bg-gray-800 text-white px-4 py-4 rounded-2xl text-xs font-bold shrink-0">🔄 重置此籤筒</button>
+                        <button onclick="resetCurrentDrawPool()" class="bg-gray-800 text-white px-4 py-3.5 rounded-2xl text-xs font-bold shrink-0 hover:bg-gray-900 transition">
+                            🔄 重置此籤筒
+                        </button>
                     </div>
                 </div>
 
@@ -400,7 +404,7 @@
         let myIdentity = localStorage.getItem('youth_user_identity') || '';
         let isHost = false;
         let editingPlayerName = '';
-        let currentDrawCat = 'over1'; // 預設一年以上
+        let currentDrawCat = 'over1';
 
         // --- 超大型題庫：120+ 題比手畫腳 ---
         const RAW_CHARADES_BANK = [
@@ -460,7 +464,7 @@
             { civilian: "水蜜桃", undercover: "甜桃" }, { civilian: "高麗菜", undercover: "大白菜" }, { civilian: "花椰菜", undercover: "青花菜" },
             { civilian: "紅蘿蔔", undercover: "白蘿蔔" }, { civilian: "洋蔥", undercover: "青蔥" }, { civilian: "大蒜", undercover: "生薑" },
             { civilian: "辣椒", undercover: "胡椒" }, { civilian: "香菜", undercover: "九層塔" }, { civilian: "空心菜", undercover: "菠菜" },
-            { civilian: "地瓜", undercover: "馬鈴薯" }, { civilian: "可樂", undercover: "汽水" }, { civilian: "果汁", undercover: "冰沙" },
+            { civilian: "地瓜", undercover: "馬涼薯" }, { civilian: "可樂", undercover: "汽水" }, { civilian: "果汁", undercover: "冰沙" },
             { civilian: "啤酒", undercover: "調酒" }, { civilian: "紅酒", undercover: "白酒" }, { civilian: "綠茶", undercover: "紅茶" },
             { civilian: "烏龍茶", undercover: "鐵觀音" }, { civilian: "豆漿", undercover: "米漿" }, { civilian: "鮮奶", undercover: "優酪乳" },
             { civilian: "礦泉水", undercover: "氣泡水" }, { civilian: "漢堡", undercover: "三明治" }, { civilian: "披薩", undercover: "蛋餅" },
@@ -682,7 +686,6 @@
             const dbKey = `partyState/drawnPlayers_${currentDrawCat}`;
             const drawn = gameState[`drawnPlayers_${currentDrawCat}`] || [];
 
-            // 根據年資過濾目標同仁
             const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat).map(p => p.name);
             const remaining = targetPool.filter(p => !drawn.includes(p));
 
@@ -734,12 +737,19 @@
             if (drawn.length > 0) {
                 const latest = drawn[drawn.length - 1];
                 resultContainer.innerHTML = `
-                    <p class="text-xs text-crimson font-bold tracking-widest uppercase mb-1">【${categoryTitle}】請上台抽獎</p>
-                    <p class="text-4xl sm:text-5xl font-black text-crimson tracking-wider animate-bounce my-2">${latest}</p>
-                    <p class="text-xs text-gray-500 font-bold">請同仁依序上台抽籤揭曉大獎！</p>
+                    <div class="bg-crimson text-white px-8 py-5 rounded-3xl shadow-xl border-4 border-pink-200 animate-pulse transform transition">
+                        <p class="text-xs text-pink-200 font-bold tracking-widest uppercase mb-1">【${categoryTitle}】請上台抽獎</p>
+                        <p class="text-4xl sm:text-6xl font-black tracking-wider my-1">${latest}</p>
+                        <p class="text-xs text-pink-100 font-bold mt-1">第 ${drawn.length} 位被抽中的幸運同仁</p>
+                    </div>
                 `;
             } else {
-                resultContainer.innerHTML = `<p class="text-sm text-gray-400 font-bold">目前為【${categoryTitle}】籤筒，請點擊下方按鈕進行抽籤！</p>`;
+                resultContainer.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+                        <p class="text-sm text-gray-500 font-bold">目前為【${categoryTitle}】籤筒</p>
+                        <p class="text-xs text-gray-400 mt-1">${isHost ? '請主持人/老闆點擊下方按鈕開始抽籤！' : '請等待主持人/老闆進行線上抽籤！'}</p>
+                    </div>
+                `;
             }
         }
 

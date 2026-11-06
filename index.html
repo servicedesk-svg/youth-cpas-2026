@@ -225,7 +225,7 @@
             </div>
         </section>
 
-        <!-- 頁籤四：個人積分排行榜（已移除任務欄位） -->
+        <!-- 頁籤四：個人積分排行榜 -->
         <section id="page-scoreboard" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100">
                 <div class="flex justify-between items-center mb-4">
@@ -252,7 +252,7 @@
             </div>
         </section>
 
-        <!-- 頁籤五：老闆抽籤筒（支援年資雙籤筒與老闆免密碼直抽） -->
+        <!-- 頁籤五：老闆抽籤筒 -->
         <section id="page-draw" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-3xl card-shadow border border-gray-100 text-center space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 pb-3 gap-3">
@@ -274,7 +274,7 @@
                         <p class="text-sm text-gray-400 font-bold">等待老闆進行抽籤...</p>
                     </div>
 
-                    <!-- 抽籤按鈕（主持人或老闆身分可直接操作） -->
+                    <!-- 抽籤按鈕（主持人或老闆可操作） -->
                     <div id="bossDrawControls" class="hidden flex-col sm:flex-row justify-center gap-3 pt-2">
                         <button onclick="drawLuckyPlayer()" class="bg-crimson text-white font-black text-lg px-8 py-3.5 rounded-2xl shadow-lg hover:bg-red-700 active:scale-95 transition transform hover:-translate-y-0.5">
                             🎲 點擊抽出上台同仁！
@@ -322,25 +322,26 @@
         </div>
     </div>
 
-    <!-- 動態管理名單 Modal（含年資標記設定） -->
+    <!-- 動態管理名單 Modal（支援三種年資/身份分類） -->
     <div id="managePlayersModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-gray-900 text-center text-base">⚙ 管理同仁名單與年資標記</h3>
+            <h3 class="font-bold text-gray-900 text-center text-base">⚙ 管理人員名單與分組</h3>
             <div class="flex gap-2">
-                <input type="text" id="newPlayerInput" placeholder="輸入姓名" class="border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold flex-grow">
+                <input type="text" id="newPlayerInput" placeholder="輸入真實姓名" class="border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold flex-grow">
                 <select id="newPlayerTypeSelect" class="border border-gray-300 rounded-xl px-2 py-2 text-xs font-bold bg-gray-50">
                     <option value="over1">🌱 一年以上</option>
                     <option value="under1">🐣 一年以下</option>
+                    <option value="boss">👑 老闆</option>
                 </select>
                 <button onclick="addPlayer()" class="bg-crimson text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">新增</button>
             </div>
-            <div class="text-xs text-gray-500">目前名單（點擊類別按鈕可切換年資標記，點 × 可刪除）：</div>
+            <div class="text-xs text-gray-500">目前名單（點擊按鈕可切換身分：一年以上 ➔ 一年以下 ➔ 老闆，點 × 刪除）：</div>
             <div id="managePlayersList" class="flex flex-col gap-2 max-h-56 overflow-y-auto p-2 bg-gray-50 rounded-xl border border-gray-200"></div>
             <button onclick="toggleManagePlayersModal()" class="w-full py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-600">關閉</button>
         </div>
     </div>
 
-    <!-- 主持人登記分數 Modal（已移除任務） -->
+    <!-- 主持人登記分數 Modal -->
     <div id="editScoreModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xs w-full p-6 card-shadow space-y-4">
             <h3 class="font-bold text-gray-900 text-center text-base">✏️ 登記／修改分數 - <span id="editScorePlayerName" class="text-crimson"></span></h3>
@@ -379,8 +380,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // 預設名單
         const DEFAULT_PLAYERS_DATA = [
-            { name: "👑 老闆", type: "over1" },
+            { name: "大老闆", type: "boss" },
             { name: "小明", type: "over1" }, { name: "小華", type: "over1" }, { name: "小美", type: "over1" },
             { name: "阿強", type: "over1" }, { name: "佳佳", type: "over1" }, { name: "志明", type: "over1" },
             { name: "春嬌", type: "under1" }, { name: "阿傑", type: "under1" }, { name: "麗婷", type: "under1" },
@@ -388,15 +390,20 @@
         ];
 
         let PLAYERS_DATA = [...DEFAULT_PLAYERS_DATA];
-        let PLAYERS = PLAYERS_DATA.map(p => p.name);
+        let ALL_NAMES = PLAYERS_DATA.map(p => p.name);
+        // 真正參與遊戲的同仁名單（排除老闆）
+        let GAME_PLAYERS = PLAYERS_DATA.filter(p => p.type !== 'boss').map(p => p.name);
 
         let myIdentity = localStorage.getItem('youth_user_identity') || '';
         let isHost = false;
         let editingPlayerName = '';
         let currentDrawCat = 'over1';
 
+        // 判斷目前綁定的是否為老闆身份（依據分組標籤 type === 'boss'）
         function isBossUser() {
-            return myIdentity && (myIdentity.includes('老闆') || myIdentity === '👑 老闆');
+            if (!myIdentity) return false;
+            const target = PLAYERS_DATA.find(p => p.name === myIdentity);
+            return target && target.type === 'boss';
         }
 
         const RAW_CHARADES_BANK = [
@@ -478,7 +485,8 @@
                 } else {
                     db.ref('partyState/playersData').set(DEFAULT_PLAYERS_DATA);
                 }
-                PLAYERS = PLAYERS_DATA.map(p => p.name);
+                ALL_NAMES = PLAYERS_DATA.map(p => p.name);
+                GAME_PLAYERS = PLAYERS_DATA.filter(p => p.type !== 'boss').map(p => p.name);
                 updateAllPlayerSelects();
             });
 
@@ -504,14 +512,20 @@
             charadesBox.innerHTML = '';
             relaySelect.innerHTML = '';
 
-            PLAYERS.forEach(name => {
-                select.innerHTML += `<option value="${name}">${name}</option>`;
+            // 頂部綁定選單：所有人（含老闆）都可以選
+            PLAYERS_DATA.forEach(p => {
+                const badge = p.type === 'boss' ? ' 👑' : '';
+                select.innerHTML += `<option value="${p.name}">${p.name}${badge}</option>`;
+            });
+
+            // 遊戲上場名單：自動排除「老闆」
+            GAME_PLAYERS.forEach(name => {
                 undercoverBox.innerHTML += `<label class="flex items-center gap-1 font-bold"><input type="checkbox" value="${name}" class="uc-cb"> ${name}</label>`;
                 charadesBox.innerHTML += `<label class="flex items-center gap-1 font-bold"><input type="checkbox" value="${name}" class="ch-cb"> ${name}</label>`;
                 relaySelect.innerHTML += `<option value="${name}">${name}</option>`;
             });
 
-            if (myIdentity && PLAYERS.includes(myIdentity)) {
+            if (myIdentity && ALL_NAMES.includes(myIdentity)) {
                 select.value = myIdentity;
             }
             updateIdentityUI();
@@ -544,13 +558,21 @@
             const container = document.getElementById('managePlayersList');
             container.innerHTML = '';
             PLAYERS_DATA.forEach((item, idx) => {
-                const tagText = item.type === 'under1' ? '🐣 一年以下' : '🌱 一年以上';
-                const tagBg = item.type === 'under1' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800';
+                let tagText = '🌱 一年以上';
+                let tagBg = 'bg-green-100 text-green-800';
+                if (item.type === 'under1') {
+                    tagText = '🐣 一年以下';
+                    tagBg = 'bg-amber-100 text-amber-800';
+                } else if (item.type === 'boss') {
+                    tagText = '👑 老闆';
+                    tagBg = 'bg-purple-100 text-purple-800';
+                }
+
                 container.innerHTML += `
                     <div class="flex justify-between items-center bg-white border border-gray-200 p-2 rounded-xl text-xs font-bold">
                         <span class="text-gray-800">${item.name}</span>
                         <div class="flex items-center gap-2">
-                            <button onclick="togglePlayerType(${idx})" class="${tagBg} px-2.5 py-1 rounded-lg hover:opacity-80 transition">${tagText}</button>
+                            <button onclick="cyclePlayerType(${idx})" class="${tagBg} px-2.5 py-1 rounded-lg hover:opacity-80 transition">${tagText}</button>
                             <button onclick="removePlayer(${idx})" class="text-crimson hover:text-red-700 font-bold px-1 text-sm">×</button>
                         </div>
                     </div>
@@ -558,8 +580,13 @@
             });
         }
 
-        function togglePlayerType(idx) {
-            PLAYERS_DATA[idx].type = PLAYERS_DATA[idx].type === 'under1' ? 'over1' : 'under1';
+        // 循環切換：over1 -> under1 -> boss -> over1
+        function cyclePlayerType(idx) {
+            const current = PLAYERS_DATA[idx].type;
+            if (current === 'over1') PLAYERS_DATA[idx].type = 'under1';
+            else if (current === 'under1') PLAYERS_DATA[idx].type = 'boss';
+            else PLAYERS_DATA[idx].type = 'over1';
+
             db.ref('partyState/playersData').set(PLAYERS_DATA);
         }
 
@@ -568,7 +595,7 @@
             const typeSelect = document.getElementById('newPlayerTypeSelect');
             const name = input.value.trim();
             const type = typeSelect.value;
-            if (name && !PLAYERS.includes(name)) {
+            if (name && !ALL_NAMES.includes(name)) {
                 PLAYERS_DATA.push({ name, type });
                 db.ref('partyState/playersData').set(PLAYERS_DATA);
                 input.value = '';
@@ -604,7 +631,7 @@
                     select.disabled = true;
                     select.classList.add('opacity-75', 'cursor-not-allowed', 'bg-gray-200');
                     if (isBossUser()) {
-                        notice.innerText = '👑 老闆專屬模式（已解鎖抽籤按鈕）';
+                        notice.innerText = '👑 老闆專屬模式（已解鎖抽籤按鈕，不計入遊戲）';
                         notice.classList.remove('text-gray-500');
                         notice.classList.add('text-crimson', 'font-bold');
                     } else {
@@ -684,7 +711,8 @@
             const dbKey = `partyState/drawnPlayers_${currentDrawCat}`;
             const drawn = gameState[`drawnPlayers_${currentDrawCat}`] || [];
 
-            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat && !p.name.includes('老闆')).map(p => p.name);
+            // 抽籤名單：依分類抓取同仁（type === currentDrawCat），絕對不會抓到 boss
+            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat).map(p => p.name);
             const remaining = targetPool.filter(p => !drawn.includes(p));
 
             const categoryName = currentDrawCat === 'under1' ? '一年以下' : '一年以上';
@@ -711,7 +739,8 @@
             const dbKey = `drawnPlayers_${currentDrawCat}`;
             const drawn = gameState[dbKey] || [];
 
-            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat && !p.name.includes('老闆')).map(p => p.name);
+            // 抽籤名單只包含該分類同仁
+            const targetPool = PLAYERS_DATA.filter(p => p.type === currentDrawCat).map(p => p.name);
             const remaining = targetPool.filter(p => !drawn.includes(p));
 
             document.getElementById('remainingCountTag').innerText = `${remaining.length} 人`;
@@ -729,6 +758,7 @@
                 drawnContainer.innerHTML += `<span class="bg-pink-soft text-crimson border border-pink-200 text-xs px-2.5 py-1 rounded-xl font-bold flex items-center gap-1"><span class="text-[10px] text-red-400">#${idx+1}</span> ${name}</span>`;
             });
 
+            // 抽籤按鈕權限：主持人 或 老闆身份 均可操作
             const bossControls = document.getElementById('bossDrawControls');
             if (isHost || isBossUser()) {
                 bossControls.classList.remove('hidden');
@@ -791,7 +821,8 @@
 
             const scoresData = gameState.scores || {};
 
-            let list = PLAYERS.filter(name => !name.includes('老闆')).map(name => {
+            // 排行榜：僅統計同仁（排除老闆）
+            let list = GAME_PLAYERS.map(name => {
                 const s = scoresData[name] || { uc: 0, ch: 0, re: 0 };
                 const total = (s.uc || 0) + (s.ch || 0) + (s.re || 0);
                 return { name, uc: s.uc || 0, ch: s.ch || 0, re: s.re || 0, total };
@@ -816,7 +847,7 @@
             });
         }
 
-        // --- 1. 誰是臥底：不重複抽取邏輯 ---
+        // --- 1. 誰是臥底 ---
         function sendUndercoverLobby() {
             const selected = Array.from(document.querySelectorAll('.uc-cb:checked')).map(cb => cb.value);
             if (selected.length < 3) { alert('請至少選擇 3 位上場夥伴！'); return; }
@@ -895,7 +926,7 @@
             }
         }
 
-        // --- 2. 比手畫腳：不重複抽取邏輯 ---
+        // --- 2. 比手畫腳 ---
         function drawCharadesTopic() {
             const selected = Array.from(document.querySelectorAll('.ch-cb:checked')).map(cb => cb.value);
             let used = gameState.usedCharades || [];
@@ -934,7 +965,7 @@
             }
         }
 
-        // --- 3. 接力猜詞：不重複抽取邏輯 ---
+        // --- 3. 接力猜詞 ---
         function drawRelayTopic() {
             const guesser = document.getElementById('relayGuesserSelect').value;
             let used = gameState.usedRelay || [];
@@ -974,10 +1005,10 @@
             }
         }
 
+        // 團隊洗牌分組：自動排除老闆
         function shuffleAndSyncTeams() {
             const count = parseInt(document.getElementById('teamCountSelect').value);
-            const filterPlayers = PLAYERS.filter(p => !p.includes('老闆'));
-            const shuffled = [...filterPlayers].sort(() => Math.random() - 0.5);
+            const shuffled = [...GAME_PLAYERS].sort(() => Math.random() - 0.5);
             const teams = Array.from({ length: count }, () => []);
             shuffled.forEach((name, idx) => teams[idx % count].push(name));
             db.ref('partyState/teams').set(teams);
